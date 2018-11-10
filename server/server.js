@@ -1,3 +1,5 @@
+require("./config");
+
 var express = require("express");
 var bodyParser = require("body-parser");
 var { ObjectId } = require("mongodb");
@@ -7,7 +9,7 @@ const { User } = require("./model/user");
 var _ = require("lodash");
 
 var app = express();
-var port = process.env.PORT || 3000;
+var port = process.env.PORT;
 app.use(bodyParser.json());
 // app.set("view engine", "hbs");
 
