@@ -1,10 +1,10 @@
 var express = require("express");
 var bodyParser = require("body-parser");
 var { ObjectId } = require("mongodb");
-const hbs = require("hbs");
 const { mongoose } = require("./db/mongoose");
 const { Todo } = require("./model/todo");
 const { User } = require("./model/user");
+var _ = require("lodash");
 
 var app = express();
 var port = process.env.PORT || 3000;
@@ -28,7 +28,7 @@ app.post("/todos", (req, res) => {
     },
     err => {
       console.log(err);
-      res.sendStatus(400);
+      res.send(400);
     }
   );
 });
@@ -48,20 +48,65 @@ app.get("/todos/:id", (req, res) => {
   const id = req.params.id;
 
   if (!ObjectId.isValid(id)) {
-    res.sendStatus(404).send();
+    return res.send(404).send();
   } else {
     Todo.findById(id)
       .then(todo => {
         if (!todo) {
-          res.sendStatus(404).send();
+          res.send(404).send();
         } else {
           res.send({ todo });
         }
       })
       .catch(e => {
-        res.sendStatus(404).send();
+        res.send(404).send();
       });
   }
+});
+
+app.delete("/todos/:id", (req, res) => {
+  const id = req.params.id;
+  if (!ObjectId.isValid(id)) {
+    return res.send(404).send();
+  }
+  Todo.findByIdAndDelete(id)
+    .then(todo => {
+      if (!todo) {
+        res.send(404).send();
+      } else {
+        res.send({ todo });
+      }
+    })
+    .catch(e => {
+      res.send(404).send();
+    });
+});
+
+app.patch("/todos/:id", (req, res) => {
+  const id = req.params.id;
+  let body = _.pick(req.body, ["text", "completed"]);
+
+  if (!ObjectId.isValid(id)) {
+    return res.sendStatus(404).send();
+  }
+
+  if (_.isBoolean(body.completed) && body.completed) {
+    body.completedAt = new Date().getTime();
+  } else {
+    body.completed = false;
+    body.completedAt = null;
+  }
+
+  Todo.findOneAndUpdate({ _id: id }, { $set: body }, { new: true })
+    .then(todo => {
+      if (!todo) {
+        res.send(404);
+      }
+      return res.send({ todo });
+    })
+    .catch(e => {
+      return res.sendStatus(400).send(e);
+    });
 });
 
 app.listen(port, () => {
