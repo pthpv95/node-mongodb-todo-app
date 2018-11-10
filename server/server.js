@@ -1,5 +1,6 @@
 var express = require("express");
 var bodyParser = require("body-parser");
+var { ObjectId } = require("mongodb");
 
 const { mongoose } = require("./db/mongoose");
 const { Todo } = require("./model/todo");
@@ -21,7 +22,7 @@ app.post("/todos", (req, res) => {
     },
     err => {
       console.log(err);
-      res.status(400).send(err);
+      res.sendStatus(400);
     }
   );
 });
@@ -37,9 +38,26 @@ app.get("/todos", (req, res) => {
   );
 });
 
-app.get("todo/:id", (req, res) => {
-  // Todo.findById(req.)
+app.get("/todos/:id", (req, res) => {
+  const id = req.params.id;
+
+  if (!ObjectId.isValid(id)) {
+    res.sendStatus(404).send();
+  } else {
+    Todo.findById(id)
+      .then(todo => {
+        if (!todo) {
+          res.sendStatus(404).send();
+        } else {
+          res.send({ todo });
+        }
+      })
+      .catch(e => {
+        res.sendStatus(404).send();
+      });
+  }
 });
+
 app.listen(port, () => {
   console.log("Starting on port 3000");
 });
