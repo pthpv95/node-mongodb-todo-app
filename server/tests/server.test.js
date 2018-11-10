@@ -11,7 +11,10 @@ const todos = [
     _id: new ObjectId()
   },
   {
-    text: "second todo"
+    _id: new ObjectId(),
+    text: "second todo",
+    completedAt: null,
+    completed: false
   }
 ];
 beforeEach(done => {
@@ -139,6 +142,38 @@ describe("DELETE /todos/:id", () => {
     request(app)
       .delete("/todos/123")
       .expect(404)
+      .end(done);
+  });
+});
+
+describe("PATCH /todos/:id", () => {
+  it("should update todo", done => {
+    const hexId = todos[1]._id.toHexString();
+    const text = "updated todo";
+    request(app)
+      .patch(`/todos/${hexId}`)
+      .send({ completed: true, text: text })
+      .expect(200)
+      .expect(res => {
+        expect(res.body.todo.completed).toBe(true);
+        expect(res.body.todo.text).toBe(text);
+        // expect(res.body.todo.completedAt).toBeA("number");
+      })
+      .end(done);
+  });
+
+  it("should return 404 if todo not completed", done => {
+    const hexId = todos[1]._id.toHexString();
+    const text = "todo text";
+    request(app)
+      .patch(`/todos/${hexId}`)
+      .send({ completed: false, text })
+      .expect(200)
+      .expect(res => {
+        expect(res.body.todo.completed).toBe(false);
+        expect(res.body.todo.text).toBe(text);
+        expect(res.body.todo.completedAt).toBe(null);
+      })
       .end(done);
   });
 });
