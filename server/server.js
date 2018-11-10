@@ -1,15 +1,21 @@
 var express = require("express");
 var bodyParser = require("body-parser");
 var { ObjectId } = require("mongodb");
-
+const hbs = require("hbs");
 const { mongoose } = require("./db/mongoose");
 const { Todo } = require("./model/todo");
 const { User } = require("./model/user");
 
-var port = process.env.PORT || 3000;
 var app = express();
+var port = process.env.PORT || 3000;
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// app.set("view engine", "hbs");
+
+app.get("/", (req, res) => {
+  res.render("home.hbs", {
+    author: "Hien Pham"
+  });
+});
 
 app.post("/todos", (req, res) => {
   var todo = new Todo({
