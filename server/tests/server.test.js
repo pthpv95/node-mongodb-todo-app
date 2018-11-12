@@ -3,24 +3,10 @@ var request = require("supertest");
 const { ObjectId } = require("mongodb");
 const { app } = require("../server");
 const { Todo } = require("../model/todo");
+const { todos, populateTodos, populateUsers, users } = require("./seed");
 
-const todos = [
-  {
-    text: "first todo text",
-    _id: new ObjectId()
-  },
-  {
-    _id: new ObjectId(),
-    text: "second todo",
-    completedAt: null,
-    completed: false
-  }
-];
-beforeEach(done => {
-  Todo.deleteMany().then(() => {
-    Todo.insertMany(todos).then(() => done());
-  });
-});
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
 describe("POST /todos", () => {
   it("should create a new todo", done => {
@@ -173,6 +159,72 @@ describe("PATCH /todos/:id", () => {
         expect(res.body.todo.text).toBe(text);
         expect(res.body.todo.completedAt).toBe(null);
       })
+      .end(done);
+  });
+});
+
+describe("GET /users/me", () => {
+  it("should return user if authenticated", done => {
+    const token = users[0].tokens[0].token;
+    request(app)
+      .get("/users/me")
+      .set("x-auth", token.toString())
+      .expect(200)
+      .expect(res => {
+        expect(res.body._id).toBe(users[0]._id.toHexString());
+        expect(res.body.email).toBe(users[0].email);
+      })
+      .end(done);
+  });
+
+  it("should 401 if not authenticated", done => {
+    request(app)
+      .get("/users/me")
+      .expect(401)
+      .expect(res => {
+        expect(res.body).toEqual({});
+      })
+      .end(done);
+  });
+});
+
+describe("POST /users", () => {
+  it("should create new user", done => {
+    const payload = {
+      email: "abc@yahoo.com",
+      password: "123!abc"
+    };
+    request(app)
+      .post("/users")
+      .send({ ...payload })
+      .expect(200)
+      .expect(res => {
+        expect(res.body.email).toBe(payload.email);
+      })
+      .end(done);
+  });
+
+  it("should return validation errors if request invalid", done => {
+    const payload = {
+      email: "abc.yahoo.com",
+      password: "123!abc"
+    };
+    request(app)
+      .post("/users")
+      .send({ ...payload })
+      .expect(400)
+      .end(done);
+  });
+
+  it("should not create user when email in use", done => {
+    const payload = {
+      email: users[0].email,
+      password: "123!abc"
+    };
+    request(app)
+      .post("/users")
+      .send({ ...payload })
+      .expect(400)
       .end(done);
   });
 });

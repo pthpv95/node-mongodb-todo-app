@@ -1,5 +1,4 @@
 require("./config");
-
 var express = require("express");
 var bodyParser = require("body-parser");
 var { ObjectId } = require("mongodb");
@@ -12,7 +11,6 @@ var { authenticate } = require("./middleware/authenticate");
 var app = express();
 var port = process.env.PORT;
 app.use(bodyParser.json());
-// app.set("view engine", "hbs");
 
 app.get("/", (req, res) => {
   res.render("home.hbs", {
@@ -113,7 +111,6 @@ app.patch("/todos/:id", (req, res) => {
 });
 
 // POST /users
-
 app.post("/users", (req, res) => {
   var body = _.pick(req.body, ["email", "password"]);
   var user = new User({
@@ -136,7 +133,7 @@ app.post("/users", (req, res) => {
 });
 
 app.get("/users/me", authenticate, (req, res) => {
-  res.send(user);
+  res.send(req.user);
 });
 
 app.listen(port, () => {
