@@ -136,6 +136,17 @@ app.get("/users/me", authenticate, (req, res) => {
   res.send(req.user);
 });
 
+app.delete("/users/me/token", authenticate, (req, res) => {
+  req.user
+    .removeToken(req.token)
+    .then(res => {
+      res.send(200).send();
+    })
+    .catch(e => {
+      res.send(400, e);
+    });
+});
+
 app.post("/users/login", (req, res) => {
   const { email, password } = req.body;
 
