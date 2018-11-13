@@ -3,21 +3,24 @@ const { Todo } = require("./../../model/todo");
 const { User } = require("./../../model/user");
 const jwt = require("jsonwebtoken");
 
+const userOneId = new ObjectId();
+const userSecondId = new ObjectId();
+
 const todos = [
   {
     text: "first todo text",
-    _id: new ObjectId()
+    _id: new ObjectId(),
+    _creator: userOneId
   },
   {
     _id: new ObjectId(),
     text: "second todo",
     completedAt: null,
-    completed: false
+    completed: false,
+    _creator: userSecondId
   }
 ];
 
-const userOneId = new ObjectId();
-const userSecondId = new ObjectId();
 const users = [
   {
     _id: userOneId,
@@ -33,7 +36,13 @@ const users = [
   {
     _id: userSecondId,
     email: "lee@gmail.com",
-    password: "userTwoPass"
+    password: "userTwoPass",
+    tokens: [
+      {
+        access: "auth",
+        token: jwt.sign({ _id: userSecondId, access: "auth" }, "abc123").toString()
+      }
+    ]
   }
 ];
 
@@ -50,7 +59,7 @@ const populateUsers = done => {
       var userTwo = new User(users[1]).save();
       return Promise.all([userOne, userTwo]);
     })
-    .then(()=>done());
+    .then(() => done());
 };
 
 module.exports = {
